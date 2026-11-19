@@ -15,9 +15,12 @@ jobs:
   sync:
     if: github.repository == 'ZHDI-1/homebrew-tmux' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    outputs:
+      updated: ${{ steps.sync.outputs.updated }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Sync the published formula
+        id: sync
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_REPO: ZHDI-1/tmux
@@ -41,3 +44,21 @@ jobs:
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit -m "Update tmux-io256 to $tag"
           git push
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+
+  install:
+    needs: sync
+    if: needs.sync.outputs.updated == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    timeout-minutes: 20
+    steps:
+      - name: Install and test the tap formula
+        run: |
+          brew install ZHDI-1/tmux/tmux-io256
+          brew test ZHDI-1/tmux/tmux-io256

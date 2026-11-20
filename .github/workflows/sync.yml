@@ -32,17 +32,18 @@ jobs:
           fi
           tag=$(jq -er '.tag_name' "$RUNNER_TEMP/release.json")
           [[ $tag =~ ^v[0-9]+(\.[0-9]+)+-io256\.[1-9][0-9]*$ ]]
-          gh release download "$tag" --repo "$SOURCE_REPO" --dir "$RUNNER_TEMP" --pattern tmux-io256.rb --pattern SHA256SUMS
-          (cd "$RUNNER_TEMP"; awk '$2 == "tmux-io256.rb" { print }' SHA256SUMS | sha256sum --check --strict)
-          ruby -c "$RUNNER_TEMP/tmux-io256.rb"
+          gh release download "$tag" --repo "$SOURCE_REPO" --dir "$RUNNER_TEMP" --pattern tmux.rb --pattern SHA256SUMS
+          (cd "$RUNNER_TEMP"; awk '$2 == "tmux.rb" { print }' SHA256SUMS | sha256sum --check --strict)
+          ruby -c "$RUNNER_TEMP/tmux.rb"
           mkdir -p Formula
-          cp "$RUNNER_TEMP/tmux-io256.rb" Formula/
-          git add Formula/tmux-io256.rb
+          cp "$RUNNER_TEMP/tmux.rb" Formula/
+          git rm --ignore-unmatch Formula/tmux-io256.rb
+          git add Formula/tmux.rb
           if git diff --cached --quiet; then
             exit 0
           fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-            commit -m "Update tmux-io256 to $tag"
+            commit -m "Update tmux to $tag"
           git push
           echo "updated=true" >> "$GITHUB_OUTPUT"
 
@@ -60,5 +61,10 @@ jobs:
     steps:
       - name: Install and test the tap formula
         run: |
-          brew install ZHDI-1/tmux/tmux-io256
-          brew test ZHDI-1/tmux/tmux-io256
+          if [[ -n "$(brew list --formula --versions tmux)" ]]; then
+            brew uninstall tmux
+          fi
+          brew install ZHDI-1/tmux/tmux
+          brew test ZHDI-1/tmux/tmux
+          test "$(command -v tmux)" = "$(brew --prefix)/bin/tmux"
+          test "$(tmux -V)" = "$("$(brew --prefix ZHDI-1/tmux/tmux)/bin/tmux" -V)"

@@ -4,9 +4,11 @@ This tap tracks the published releases of the [tmux io256 fork](https://github.c
 Its formula installs the native build for Intel or Apple Silicon on macOS 15
 or later.
 
-    brew install ZHDI-1/tmux/tmux-io256
-    tmux-io256 -L io256 new-session
+If Homebrew already has stock tmux installed, uninstall it first with
+`brew uninstall tmux`. Then install the fork and launch it with `tmux`.
 
-The formula appears after the first release and tap sync. The workflow
-checks the published checksum and refreshes the formula every hour. It
-also supports manual dispatch.
+    brew install ZHDI-1/tmux/tmux
+    tmux
+
+The workflow checks the published checksum and refreshes the formula every
+hour. It also supports manual dispatch.
